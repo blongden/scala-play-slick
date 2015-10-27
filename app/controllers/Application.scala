@@ -1,31 +1,12 @@
 package controllers
 
 import javax.inject.Inject
-import play.api._
+import models.Users
 import play.api.mvc._
-import slick.driver.JdbcProfile
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import models.{User => UserModel}
-
-class Application @Inject() (dbConfigProvider: db.slick.DatabaseConfigProvider) extends Controller {
-  val dbConfig = dbConfigProvider.get[JdbcProfile]
-
-  import dbConfig.driver.api._
-
-  private class UserTable(tag: Tag) extends Table[UserModel](tag, "USER") {
-    def id = column[Int]("id", O.PrimaryKey)
-    def email = column[String]("email")
-    def password = column[String]("password")
-    def fullname = column[String]("fullname")
-    def isAdmin = column[Int]("isAdmin")
-
-    def * = (id, email, password, fullname, isAdmin) <> ((UserModel.apply _).tupled, UserModel.unapply)
-  }
-
-  private val users = TableQuery[UserTable]
-
+class Application @Inject() (userRep: Users) extends Controller {
   def index = Action.async { implicit request =>
-    dbConfig.db.run(users.result).map(users => Ok(views.html.index(users)))
+    userRep.list().map(users => Ok(views.html.index(users)))
   }
 }
