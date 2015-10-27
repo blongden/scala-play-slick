@@ -1,7 +1,7 @@
-@(users: Seq[(Int, String, String, String, Int)])
+@(users: Seq[User])
 
 @main("Badger") {
     @for(user <- users) {
-        <p>@user._4</p>
+        <p>@user.fullname</p>
     }
 }
