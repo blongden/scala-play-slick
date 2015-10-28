@@ -17,7 +17,7 @@ class Users @Inject() (dbConfigProvider: db.slick.DatabaseConfigProvider) {
   import dbConfig.driver.api._
 
   private class UserTable(tag: Tag) extends Table[UserModel](tag, "USER") {
-    def id = column[Int]("id", O.PrimaryKey)
+    def id = column[String]("id", O.PrimaryKey)
     def email = column[String]("email")
     def password = column[String]("password")
     def fullname = column[String]("fullname")
@@ -29,4 +29,8 @@ class Users @Inject() (dbConfigProvider: db.slick.DatabaseConfigProvider) {
   private val users = TableQuery[UserTable]
 
   def list(): Future[Seq[UserModel]] = dbConfig.db.run(users.result)
+
+  def add(id: String, email: String, password: String, fullname: String, isAdmin: Int): Future[Int] = add(UserModel(id, email, password, fullname, isAdmin))
+
+  def add(user: UserModel): Future[Int] = dbConfig.db.run { users += user }
 }
