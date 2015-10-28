@@ -1,6 +1,20 @@
-@(users: Seq[User])
+@(user: Form[CreateUserForm], users: Seq[User])(implicit messages: Messages)
 
-@main("Badger") {
+@import helper._
+
+@main("Welcome to out awesome user app") {
+
+    @form(routes.Application.addUser()) {
+        @inputText(user("fullname"))
+        @inputText(user("email"))
+        @inputPassword(user("password"))
+        @checkbox(user("isAdmin"))
+
+        <div class="buttons">
+            <input type="submit" value="Add User" />
+        </div>
+    }
+
     @for(user <- users) {
         <p>@user.fullname</p>
     }
