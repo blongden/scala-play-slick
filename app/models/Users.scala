@@ -12,6 +12,7 @@ class Users @Inject() (dbConfigProvider: db.slick.DatabaseConfigProvider) {
   val dbConfig = dbConfigProvider.get[JdbcProfile]
 
   import dbConfig.driver.api._
+  import dbConfig.db
 
   private class UserTable(tag: Tag) extends Table[UserModel](tag, "USER") {
     def id = column[String]("id", O.PrimaryKey)
@@ -25,21 +26,15 @@ class Users @Inject() (dbConfigProvider: db.slick.DatabaseConfigProvider) {
 
   private val users = TableQuery[UserTable]
 
-  def list(): Future[Seq[UserModel]] = dbConfig.db.run(users.result)
+  def list(): Future[Seq[UserModel]] = db.run(users.result)
 
-  def add(id: String, email: String, password: String, fullname: String, isAdmin: Int): Future[Int] = add(UserModel(id, email, password, fullname, isAdmin))
+  def add(user: UserModel): Future[Int] = db.run { users += user }
 
-  def add(user: UserModel): Future[Int] = dbConfig.db.run { users += user }
+  private def filterById(id: String) = users.filter(_.id === id)
 
-  def findById(id: String): Future[UserModel] = dbConfig.db.run {
-    users.filter(_.id === id).result.head
-  }
+  def findById(id: String): Future[UserModel] = db.run { filterById(id).result.head }
 
-  def update(user: UserModel): Future[Int] = dbConfig.db.run {
-    users.filter(_.id === user.id).map(u => (u.email, u.password, u.fullname, u.isAdmin)).update((user.email, user.password, user.fullname, user.isAdmin))
-  }
+  def update(user: UserModel): Future[Int] = db.run { filterById(user.id).update(user) }
 
-  def delete(id: String): Future[Int] = dbConfig.db.run {
-    users.filter(_.id === id).delete
-  }
+  def delete(id: String): Future[Int] = db.run { filterById(id).delete }
 }
