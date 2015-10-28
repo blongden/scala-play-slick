@@ -1,0 +1,16 @@
+@(id: String, user: Form[CreateUserForm])(implicit messages: Messages)
+
+@import helper._
+
+@main("Welcome to our awesome user app") {
+    @form(routes.Application.saveUser(id)) {
+        @inputText(user("fullname"))
+        @inputText(user("email"))
+        @inputPassword(user("password"))
+        @checkbox(user("isAdmin"))
+
+        <div class="buttons">
+            <input type="submit" value="Edit User" />
+        </div>
+    }
+}

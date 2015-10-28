@@ -8,9 +8,6 @@ import slick.driver.JdbcProfile
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-/**
- * Created by ben on 27/10/15.
- */
 class Users @Inject() (dbConfigProvider: db.slick.DatabaseConfigProvider) {
   val dbConfig = dbConfigProvider.get[JdbcProfile]
 
@@ -33,4 +30,16 @@ class Users @Inject() (dbConfigProvider: db.slick.DatabaseConfigProvider) {
   def add(id: String, email: String, password: String, fullname: String, isAdmin: Int): Future[Int] = add(UserModel(id, email, password, fullname, isAdmin))
 
   def add(user: UserModel): Future[Int] = dbConfig.db.run { users += user }
+
+  def findById(id: String): Future[UserModel] = dbConfig.db.run {
+    users.filter(_.id === id).result.head
+  }
+
+  def update(user: UserModel): Future[Int] = dbConfig.db.run {
+    users.filter(_.id === user.id).map(u => (u.email, u.password, u.fullname, u.isAdmin)).update((user.email, user.password, user.fullname, user.isAdmin))
+  }
+
+  def delete(id: String): Future[Int] = dbConfig.db.run {
+    users.filter(_.id === id).delete
+  }
 }

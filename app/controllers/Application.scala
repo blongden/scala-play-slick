@@ -1,7 +1,7 @@
 package controllers
 
 import javax.inject.Inject
-import models.Users
+import models.{User, Users}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.Constraints._
@@ -31,10 +31,43 @@ class Application @Inject() (userRep: Users, val messagesApi: MessagesApi) exten
       },
 
       user => {
-        userRep.add(java.util.UUID.randomUUID.toString, user.email, user.password, user.fullname, if (user.isAdmin) 1 else 0).map { _ => Redirect(routes.Application.index()) }
+        userRep.add(
+          User(
+            java.util.UUID.randomUUID.toString,
+            user.email,
+            user.password,
+            user.fullname,
+            if (user.isAdmin) 1 else 0
+        )).map { _ => Redirect(routes.Application.index()) }
       }
     )
+  }
 
+  def editUser(id: String) = Action.async { implicit request =>
+    userRep.findById(id).map(user => Ok(views.html.edit(id, userForm.fill(CreateUserForm(user.email, user.password, user.fullname, if (user.isAdmin == 1) true else false)))))
+  }
+
+  def saveUser(id: String) = Action.async { implicit request =>
+    userForm.bindFromRequest.fold(
+      errorForm => {
+        Future.successful(Ok(views.html.edit(id, errorForm)))
+      },
+
+      user => {
+        userRep.update(
+          User(
+            id,
+            user.email,
+            user.password,
+            user.fullname,
+            if (user.isAdmin) 1 else 0
+          )).map { _ => Redirect(routes.Application.index()) }
+      }
+    )
+  }
+
+  def deleteUser(id: String) = Action.async {
+    userRep.delete(id).map { _ => Redirect(routes.Application.index()) }
   }
 }
 

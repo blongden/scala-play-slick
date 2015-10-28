@@ -2,7 +2,7 @@
 
 @import helper._
 
-@main("Welcome to out awesome user app") {
+@main("Welcome to our awesome user app") {
 
     @form(routes.Application.addUser()) {
         @inputText(user("fullname"))
@@ -15,7 +15,14 @@
         </div>
     }
 
+
     @for(user <- users) {
-        <p>@user.fullname</p>
+        <p>
+            @user.fullname
+            <a href='@routes.Application.editUser(user.id)'>edit</a>
+            @form(routes.Application.deleteUser(user.id)) {
+                <input type="submit" value="delete" />
+            }
+        </p>
     }
 }
