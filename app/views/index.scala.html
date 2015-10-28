@@ -19,10 +19,13 @@
     @for(user <- users) {
         <div class="user">
             <span class="fullname">@user.fullname</span>
-            <a href='@routes.Application.editUser(user.id)'>edit</a>
-            @form(routes.Application.deleteUser(user.id)) {
-                <input type="submit" value="delete" />
-            }
+
+            <span class="options">
+                <a href='@routes.Application.editUser(user.id)'>edit</a>
+                @form(routes.Application.deleteUser(user.id)) {
+                    <input type="submit" value="delete" />
+                }
+            </span>
         </div>
     }
 }

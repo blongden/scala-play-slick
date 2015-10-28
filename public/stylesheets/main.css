@@ -1,6 +1,5 @@
 .user {
     padding: 6px;
-    width: 50%;
 }
 
 .user:nth-child(odd) {
@@ -11,13 +10,17 @@
     background: #ddd;
 }
 
-.user > form {
-    display: inline;
-}
-
 .fullname {
     display: inline-block;
-    width: 85%;
+}
+
+.options {
+    float: right;
+    min-width: 80px;
+}
+
+.options > form {
+    display: inline;
 }
 
 .info {
