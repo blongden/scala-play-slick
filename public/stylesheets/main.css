@@ -1,0 +1,28 @@
+.user {
+    padding: 6px;
+}
+
+.user:nth-child(odd) {
+    background: #eee;
+}
+
+.user:nth-child(even) {
+    background: #ddd;
+}
+
+.fullname {
+    display: inline-block;
+}
+
+.options {
+    float: right;
+    min-width: 80px;
+}
+
+.options > form {
+    display: inline;
+}
+
+.info {
+    display: none;
+}
