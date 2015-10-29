@@ -32,7 +32,7 @@ class Users @Inject() (dbConfigProvider: db.slick.DatabaseConfigProvider) {
 
   private def filterById(id: String) = users.filter(_.id === id)
 
-  def findById(id: String): Future[UserModel] = db.run { filterById(id).result.head }
+  def findById(id: String): Future[Option[UserModel]] = db.run { filterById(id).result.headOption }
 
   def update(user: UserModel): Future[Int] = db.run { filterById(user.id).update(user) }
 

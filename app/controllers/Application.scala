@@ -44,7 +44,10 @@ class Application @Inject() (userRep: Users, val messagesApi: MessagesApi) exten
   }
 
   def editUser(id: String) = Action.async { implicit request =>
-    userRep.findById(id).map(user => Ok(views.html.edit(id, userForm.fill(CreateUserForm(user.email, user.password, user.fullname, user.isAdmin == 1)))))
+    userRep.findById(id).map {
+      case Some(u) => Ok(views.html.edit(id, userForm.fill(CreateUserForm(u.email, u.password, u.fullname, u.isAdmin == 1))))
+      case None => NotFound(s"No user was found for id: $id")
+    }
   }
 
   def saveUser(id: String) = Action.async { implicit request =>
