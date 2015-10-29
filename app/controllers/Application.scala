@@ -44,7 +44,7 @@ class Application @Inject() (userRep: Users, val messagesApi: MessagesApi) exten
   }
 
   def editUser(id: String) = Action.async { implicit request =>
-    userRep.findById(id).map(user => Ok(views.html.edit(id, userForm.fill(CreateUserForm(user.email, user.password, user.fullname, if (user.isAdmin == 1) true else false)))))
+    userRep.findById(id).map(user => Ok(views.html.edit(id, userForm.fill(CreateUserForm(user.email, user.password, user.fullname, user.isAdmin == 1)))))
   }
 
   def saveUser(id: String) = Action.async { implicit request =>
