@@ -1,4 +1,4 @@
-@(id: String, user: Form[CreateUserForm])(implicit messages: Messages)
+@(id: String, user: Form[EditUserForm])(implicit messages: Messages)
 
 @import helper._
 
@@ -6,7 +6,6 @@
     @form(routes.Application.saveUser(id)) {
         @inputText(user("fullname"))
         @inputText(user("email"))
-        @inputPassword(user("password"))
         @checkbox(user("isAdmin"))
 
         <div class="buttons">
