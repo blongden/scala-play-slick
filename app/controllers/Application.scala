@@ -1,8 +1,10 @@
 package controllers
 
+import java.util.UUID.randomUUID
 import javax.inject.Inject
 import models._
 import forms.UserForms._
+import play.api.data.Form
 import play.api.mvc._
 import play.api.i18n._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -10,12 +12,12 @@ import scala.concurrent.Future
 
 class Application @Inject() (userRep: Users, val messagesApi: MessagesApi, handle: UserHandler) extends Controller with I18nSupport {
 
-  def index = Action.async { userRep.list().map(users => Ok(views.html.index(createForm, users))) }
+  def index = ActionWithUsers { implicit context => renderIndex(createForm) }
 
-  def addUser = Action.async { implicit request =>
+  def addUser = ActionWithUsers { implicit context =>
     createForm.bindFromRequest.fold(
-      errorForm => userRep.list().map(users => Ok(views.html.index(errorForm, users))),
-      formData => handle(CreateUser(java.util.UUID.randomUUID.toString, formData)).map(redirectToIndex)
+      renderIndex,
+      formData => handle(CreateUser(randomUUID.toString, formData)) map redirectToIndex
     )
   }
 
@@ -38,9 +40,21 @@ class Application @Inject() (userRep: Users, val messagesApi: MessagesApi, handl
 
   def deleteUser(id: String) = Action.async {handle(DeleteUser(id)) map redirectToIndex}
 
+  def ActionWithUsers(f: ContextWithUsers => Future[Result]) = {
+    Action.async { request =>
+      userRep.list().flatMap(users => f(ContextWithUsers(users, request)))
+    }
+  }
+
+  private def renderIndex(form: Form[CreateUserData])(implicit context: ContextWithUsers) = {
+    Future(Ok(views.html.index(form)))
+  }
+
   private def userNotFound(id: String) = NotFound(s"No user was found for id: $id")
 
   private def redirectToIndex(): Result = Redirect(routes.Application.index())
 
   private def redirectToIndex(a: Any): Result = redirectToIndex()
 }
+
+case class ContextWithUsers(users: Seq[User], request: Request[AnyContent]) extends WrappedRequest(request)

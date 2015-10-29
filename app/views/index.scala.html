@@ -1,4 +1,4 @@
-@(user: Form[CreateUserData], users: Seq[User])(implicit messages: Messages)
+@(user: Form[CreateUserData])(implicit messages: Messages, context: ContextWithUsers)
 
 @import helper._
 
@@ -16,7 +16,7 @@
     }
 
 
-    @for(user <- users) {
+    @for(user <- context.users) {
         <div class="user">
             <span class="fullname">@user.fullname</span>
 
