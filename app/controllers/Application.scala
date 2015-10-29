@@ -11,21 +11,21 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class Application @Inject() (userRep: Users, val messagesApi: MessagesApi) extends Controller with I18nSupport {
-  val createForm: Form[CreateUser] = Form {
+  val createForm: Form[CreateUserData] = Form {
     mapping(
       "email" -> nonEmptyText,
       "password" -> nonEmptyText,
       "fullname" -> nonEmptyText,
       "isAdmin" -> boolean
-    )(CreateUser.apply)(CreateUser.unapply)
+    )(CreateUserData.apply)(CreateUserData.unapply)
   }
 
-  val editForm: Form[EditUser] = Form {
+  val editForm: Form[EditUserData] = Form {
     mapping(
       "email" -> nonEmptyText,
       "fullname" -> nonEmptyText,
       "isAdmin" -> boolean
-    )(EditUser.apply)(EditUser.unapply)
+    )(EditUserData.apply)(EditUserData.unapply)
   }
 
   def index = Action.async { userRep.list().map(users => Ok(views.html.index(createForm, users))) }
@@ -33,22 +33,13 @@ class Application @Inject() (userRep: Users, val messagesApi: MessagesApi) exten
   def addUser = Action.async { implicit request =>
     createForm.bindFromRequest.fold(
       errorForm => userRep.list().map(users => Ok(views.html.index(errorForm, users))),
-      formData => {
-        userRep.add(
-          User(
-            java.util.UUID.randomUUID.toString,
-            formData.email,
-            formData.password,
-            formData.fullname,
-            formData.isAdmin
-        )).map(redirectToIndex)
-      }
+      formData => handle(CreateUser(java.util.UUID.randomUUID.toString, formData)).map(redirectToIndex)
     )
   }
 
   def editUser(id: String) = Action.async {
     userRep.findById(id).map {
-      case Some(u) => Ok(views.html.edit(id, editForm.fill(EditUser(u.email, u.fullname, u.isAdmin))))
+      case Some(u) => Ok(views.html.edit(id, editForm.fill(EditUserData(u.email, u.fullname, u.isAdmin))))
       case None => userNotFound(id)
     }
   }
@@ -56,21 +47,35 @@ class Application @Inject() (userRep: Users, val messagesApi: MessagesApi) exten
   def saveUser(id: String) = Action.async { implicit request =>
     editForm.bindFromRequest.fold(
       errorForm => Future.successful(Ok(views.html.edit(id, errorForm))),
-      formData => {
-        userRep.findById(id).flatMap {
-          case None => Future.successful(userNotFound(id))
-          case Some(existingUser) => userRep.update(User(id, formData.email, existingUser.password, formData.fullname, formData.isAdmin)).map(redirectToIndex)
-          }
-        }
+      formData => { handle(EditUser(id, formData)).map {
+        case None => userNotFound(id)
+        case _    => redirectToIndex()
+      }}
     )
   }
 
-  def deleteUser(id: String) = Action.async {userRep.delete(id) map redirectToIndex}
+  def deleteUser(id: String) = Action.async {handle(DeleteUser(id)) map redirectToIndex}
 
   private def userNotFound(id: String) = NotFound(s"No user was found for id: $id")
 
-  private def redirectToIndex(a: Any) = Redirect(routes.Application.index())
+  private def redirectToIndex(): Result = Redirect(routes.Application.index())
+
+  private def redirectToIndex(a: Any): Result = redirectToIndex()
+
+  private def handle(command: UserCommand) = command match {
+    case CreateUser(id, CreateUserData(e, p, fn, a)) => userRep.add(User(id, e, p, fn, a))
+    case EditUser(id, EditUserData(e, fn, a)) => userRep.findById(id).flatMap {
+      case None => Future(None)
+      case Some(existingUser) => userRep.update(User(id, e, existingUser.password, fn, a))
+    }
+    case DeleteUser(id) => userRep.delete(id)
+  }
 }
 
-case class CreateUser(email: String, password: String, fullname: String, isAdmin: Boolean)
-case class EditUser(email: String, fullname: String, isAdmin: Boolean)
+sealed trait UserCommand
+final case class CreateUser(id: String, properties: CreateUserData) extends UserCommand
+final case class EditUser(id: String, properties: EditUserData) extends UserCommand
+final case class DeleteUser(id: String) extends UserCommand
+
+case class CreateUserData(email: String, password: String, fullname: String, isAdmin: Boolean)
+case class EditUserData(email: String, fullname: String, isAdmin: Boolean)
