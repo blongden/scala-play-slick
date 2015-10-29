@@ -19,7 +19,7 @@ class Users @Inject() (dbConfigProvider: db.slick.DatabaseConfigProvider) {
     def email = column[String]("email")
     def password = column[String]("password")
     def fullname = column[String]("fullname")
-    def isAdmin = column[Int]("isAdmin")
+    def isAdmin = column[Boolean]("isAdmin")
 
     def * = (id, email, password, fullname, isAdmin) <> ((UserModel.apply _).tupled, UserModel.unapply)
   }
