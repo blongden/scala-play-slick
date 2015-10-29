@@ -40,7 +40,7 @@ class Application @Inject() (userRep: Users, val messagesApi: MessagesApi) exten
             formData.email,
             formData.password,
             formData.fullname,
-            if (formData.isAdmin) 1 else 0
+            formData.isAdmin
         )).map(redirectToIndex)
       }
     )
@@ -48,7 +48,7 @@ class Application @Inject() (userRep: Users, val messagesApi: MessagesApi) exten
 
   def editUser(id: String) = Action.async {
     userRep.findById(id).map {
-      case Some(u) => Ok(views.html.edit(id, editForm.fill(EditUser(u.email, u.fullname, u.isAdmin == 1))))
+      case Some(u) => Ok(views.html.edit(id, editForm.fill(EditUser(u.email, u.fullname, u.isAdmin))))
       case None => userNotFound(id)
     }
   }
@@ -59,7 +59,7 @@ class Application @Inject() (userRep: Users, val messagesApi: MessagesApi) exten
       formData => {
         userRep.findById(id).flatMap {
           case None => Future.successful(userNotFound(id))
-          case Some(existingUser) => userRep.update(User(id, formData.email, existingUser.password, formData.fullname, if (formData.isAdmin) 1 else 0)).map(redirectToIndex)
+          case Some(existingUser) => userRep.update(User(id, formData.email, existingUser.password, formData.fullname, formData.isAdmin)).map(redirectToIndex)
           }
         }
     )
