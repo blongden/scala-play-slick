@@ -21,14 +21,14 @@ class Application @Inject() (userRep: Users, val messagesApi: MessagesApi, handl
     )
   }
 
-  def editUser(id: String) = Action.async {
+  def editUser(id: String) = ActionWithUsers { implicit context =>
     userRep.findById(id).map {
       case Some(u) => Ok(views.html.edit(id, editForm.fill(EditUserData(u.email, u.fullname, u.isAdmin))))
       case None => userNotFound(id)
     }
   }
 
-  def saveUser(id: String) = Action.async { implicit request =>
+  def saveUser(id: String) = ActionWithUsers { implicit context =>
     editForm.bindFromRequest.fold(
       errorForm => Future.successful(Ok(views.html.edit(id, errorForm))),
       formData => { handle(EditUser(id, formData)).map {
