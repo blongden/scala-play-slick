@@ -1,7 +1,6 @@
 package models
 
 import javax.inject.Inject
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class UserHandler @Inject() (userRep: Users) {
@@ -12,9 +11,8 @@ class UserHandler @Inject() (userRep: Users) {
   }
 
   private def handlerEditUser(id: String, email: String, fullname: String, isAdmin: Boolean) = {
-    userRep.findById(id).flatMap {
-      case None => Future(None)
-      case Some(existingUser) => userRep.update(User(id, email, existingUser.password, fullname, isAdmin))
-    }
+    for {x <- userRep.findById(id)}
+      yield for {existingUser <- x}
+        yield userRep.update(User(id, email, existingUser.password, fullname, isAdmin))
   }
 }
